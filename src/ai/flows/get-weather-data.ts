@@ -14,7 +14,7 @@ import { z } from 'zod';
 const GetWeatherDataInputSchema = z.object({
     latitude: z.number(),
     longitude: z.number(),
-    language: z.string().optional().describe('The language for the weather description. e.g., en, hi, bn, te'),
+    language: z.string().optional().describe('The language for the weather description. e.g., en, hi, bn, te, pa'),
 });
 
 export type GetWeatherDataInput = z.infer<typeof GetWeatherDataInputSchema>;
@@ -93,43 +93,25 @@ const getWeatherDataFlow = ai.defineFlow(
         }
         const forecastData = await forecastResponse.json();
         
-        // Process forecast data to get one entry per day
-        const dailyForecasts: { [key: string]: any } = {};
-        forecastData.list.forEach((item: any) => {
-            const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
-            if (!dailyForecasts[date] && new Date(item.dt * 1000).getHours() >= 12) {
-                 dailyForecasts[date] = item;
-            }
-        });
-
-        // Create a 5-day forecast, starting from tomorrow
-        const forecast: GetWeatherDataOutput['forecast'] = Object.values(dailyForecasts)
-          .slice(0, 5)
-          .map((day: any) => ({
-            day: new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
-            temp: day.main.temp,
-            weather: {
-                main: day.weather[0].main,
-                icon: day.weather[0].icon,
-            },
-        }));
-
-        // Fill remaining days if we don't have 5 days yet
-        let dayIndex = 1;
-        while(forecast.length < 5 && dayIndex < forecastData.list.length) {
-            const item = forecastData.list[dayIndex];
+        const forecast: GetWeatherDataOutput['forecast'] = [];
+        const seenDays = new Set();
+        
+        for (const item of forecastData.list) {
             const day = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
-            if (!forecast.find(f => f.day === day)) {
-                 forecast.push({
+            if (!seenDays.has(day)) {
+                seenDays.add(day);
+                forecast.push({
                     day: day,
                     temp: item.main.temp,
                     weather: {
                         main: item.weather[0].main,
                         icon: item.weather[0].icon,
-                    }
+                    },
                 });
             }
-            dayIndex++;
+            if (forecast.length === 5) {
+                break;
+            }
         }
         
         return { current, forecast };

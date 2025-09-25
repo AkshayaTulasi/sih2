@@ -20,7 +20,7 @@ import { Skeleton } from "./ui/skeleton";
 import { useLanguage } from "@/context/language-context";
 
 export function PestDetection() {
-  const [loading, setLoading] =useState(false);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DetectPestAndGiveAdviceOutput | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -101,8 +101,7 @@ export function PestDetection() {
                 <img
                   src={imagePreview}
                   alt="Plant preview"
-                  className="object-contain h-full w-full"
-                  data-ai-hint="plant disease"
+                  className="object-contain w-full h-full"
                 />
               </div>
             )}
@@ -137,7 +136,7 @@ export function PestDetection() {
       {result && (
         <Card className="animate-in fade-in">
           <CardHeader>
-            <CardTitle className="text-primary flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <Sprout />
               {t('diagnosis')}: {result.pestOrDisease}
             </CardTitle>
