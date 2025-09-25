@@ -1,7 +1,6 @@
 "use client";
 
 import { Camera, Loader, Send, Sprout } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 import type { DetectPestAndGiveAdviceOutput } from "@/ai/flows/detect-pest-and-give-advice";
@@ -98,12 +97,11 @@ export function PestDetection() {
             </div>
 
             {imagePreview && (
-              <div className="relative w-full overflow-hidden border-2 rounded-lg aspect-video border-dashed">
-                <Image
+              <div className="relative w-full overflow-hidden border-2 rounded-lg aspect-video border-dashed flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                <img
                   src={imagePreview}
                   alt="Plant preview"
-                  fill
-                  className="object-contain"
+                  className="object-contain h-full w-full"
                   data-ai-hint="plant disease"
                 />
               </div>
