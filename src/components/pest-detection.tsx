@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Loader, Send, Sprout } from "lucide-react";
+import { Camera, Loader, Sprout } from "lucide-react";
 import { useState } from "react";
 
 import type { DetectPestAndGiveAdviceOutput } from "@/ai/flows/detect-pest-and-give-advice";
