@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -56,12 +57,16 @@ export function VoiceAssistant() {
       };
 
       recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        toast({
-          variant: "destructive",
-          title: "Speech Recognition Error",
-          description: event.error,
-        });
+        if (event.error === 'no-speech') {
+            console.log("No speech detected. Stopping recording.");
+        } else {
+            console.error("Speech recognition error", event.error);
+            toast({
+              variant: "destructive",
+              title: "Speech Recognition Error",
+              description: event.error,
+            });
+        }
         setIsRecording(false);
       };
       
