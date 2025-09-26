@@ -57,63 +57,72 @@ const getWeatherDataFlow = ai.defineFlow(
         outputSchema: GetWeatherDataOutputSchema,
     },
     async ({ latitude, longitude, language }) => {
-        const apiKey = process.env.OPENWEATHER_API_KEY;
-        if (!apiKey || apiKey === "YOUR_OPENWEATHER_API_KEY") {
-            throw new Error('OpenWeatherMap API key is not configured. Please add it to your .env file.');
-        }
-
-        const langParam = language ? `&lang=${language}` : '';
-
-        // Fetch current weather
-        const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric${langParam}`;
-        const currentResponse = await fetch(currentUrl);
-        if (!currentResponse.ok) {
-            const errorData = await currentResponse.json().catch(() => ({ message: 'Failed to fetch current weather data.' }));
-            throw new Error(errorData.message || 'Failed to fetch current weather data.');
-        }
-        const currentData = await currentResponse.json();
-
-        const current = {
-            temp: currentData.main.temp,
-            feels_like: currentData.main.feels_like,
-            weather: {
-                main: currentData.weather[0].main,
-                description: currentData.weather[0].description,
-                icon: currentData.weather[0].icon,
-            },
-            wind_speed: currentData.wind.speed,
-        };
-
-        // Fetch forecast weather
-        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric${langParam}`;
-        const forecastResponse = await fetch(forecastUrl);
-        if (!forecastResponse.ok) {
-            const errorData = await forecastResponse.json().catch(() => ({ message: 'Failed to fetch forecast data.' }));
-            throw new Error(errorData.message || 'Failed to fetch forecast data.');
-        }
-        const forecastData = await forecastResponse.json();
-        
-        const forecast: GetWeatherDataOutput['forecast'] = [];
-        const seenDays = new Set();
-        
-        for (const item of forecastData.list) {
-            const day = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
-            if (!seenDays.has(day)) {
-                seenDays.add(day);
-                forecast.push({
-                    day: day,
-                    temp: item.main.temp,
-                    weather: {
-                        main: item.weather[0].main,
-                        icon: item.weather[0].icon,
-                    },
-                });
+        try {
+            const apiKey = process.env.OPENWEATHER_API_KEY;
+            if (!apiKey || apiKey === "YOUR_OPENWEATHER_API_KEY") {
+                throw new Error('OpenWeatherMap API key is not configured. Please add it to your .env file.');
             }
-            if (forecast.length === 5) {
-                break;
+
+            const langParam = language ? `&lang=${language}` : '';
+
+            // Fetch current weather
+            const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric${langParam}`;
+            const currentResponse = await fetch(currentUrl);
+            if (!currentResponse.ok) {
+                const errorData = await currentResponse.json().catch(() => ({ message: 'Failed to fetch current weather data.' }));
+                throw new Error(errorData.message || 'Failed to fetch current weather data.');
             }
+            const currentData = await currentResponse.json();
+
+            const current = {
+                temp: currentData.main.temp,
+                feels_like: currentData.main.feels_like,
+                weather: {
+                    main: currentData.weather[0].main,
+                    description: currentData.weather[0].description,
+                    icon: currentData.weather[0].icon,
+                },
+                wind_speed: currentData.wind.speed,
+            };
+
+            // Fetch forecast weather
+            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric${langParam}`;
+            const forecastResponse = await fetch(forecastUrl);
+            if (!forecastResponse.ok) {
+                const errorData = await forecastResponse.json().catch(() => ({ message: 'Failed to fetch forecast data.' }));
+                throw new Error(errorData.message || 'Failed to fetch forecast data.');
+            }
+            const forecastData = await forecastResponse.json();
+            
+            const forecast: GetWeatherDataOutput['forecast'] = [];
+            const seenDays = new Set();
+            
+            for (const item of forecastData.list) {
+                const day = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+                if (!seenDays.has(day)) {
+                    seenDays.add(day);
+                    forecast.push({
+                        day: day,
+                        temp: item.main.temp,
+                        weather: {
+                            main: item.weather[0].main,
+                            icon: item.weather[0].icon,
+                        },
+                    });
+                }
+                if (forecast.length === 5) {
+                    break;
+                }
+            }
+            
+            return { current, forecast };
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error("Error in getWeatherDataFlow: ", error.message);
+                throw error;
+            }
+            console.error("An unknown error occurred in getWeatherDataFlow");
+            throw new Error("An unknown error occurred while fetching weather data.");
         }
-        
-        return { current, forecast };
     }
 );
