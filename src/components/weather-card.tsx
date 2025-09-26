@@ -21,15 +21,18 @@ import {
   Wind,
   Thermometer,
   Loader,
-  AlertCircle
+  AlertCircle,
+  TriangleAlert,
 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { useLanguage } from "@/context/language-context";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { fetchWeatherData } from "@/lib/actions";
+import { fetchWeatherData, generateWeatherAlertAction } from "@/lib/actions";
 import type { GetWeatherDataOutput } from "@/ai/flows/get-weather-data";
+import type { GenerateWeatherAlertOutput } from "@/ai/flows/generate-weather-alert";
 import React from "react";
+import { Badge } from "./ui/badge";
 
 const weatherIconMapping: { [key: string]: React.ReactNode } = {
   "01d": <Sun className="w-6 h-6 text-orange-400" />,
@@ -67,6 +70,7 @@ export function WeatherCard() {
   const { t, language } = useLanguage();
   const [location, setLocation] = useState<{city: string, state: string} | null>(null);
   const [weatherData, setWeatherData] = useState<GetWeatherDataOutput | null>(null);
+  const [weatherAlert, setWeatherAlert] = useState<GenerateWeatherAlertOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +89,10 @@ export function WeatherCard() {
             const weatherResponse = await fetchWeatherData({ latitude, longitude, language });
             if (weatherResponse.success && weatherResponse.data) {
               setWeatherData(weatherResponse.data);
+              const alertResponse = await generateWeatherAlertAction({ weatherData: weatherResponse.data, language });
+              if (alertResponse.success && alertResponse.data) {
+                setWeatherAlert(alertResponse.data);
+              }
             } else {
               setError(weatherResponse.error || t('weatherFetchError'));
             }
@@ -118,6 +126,13 @@ export function WeatherCard() {
     return icon;
   };
 
+  const alertSeverityColor = {
+    low: "bg-yellow-400",
+    medium: "bg-orange-500",
+    high: "bg-red-600",
+    none: "hidden"
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -143,6 +158,16 @@ export function WeatherCard() {
         )}
         {!loading && !error && weatherData && (
           <>
+            {weatherAlert && weatherAlert.alert && weatherAlert.severity !== 'none' && (
+              <Alert variant={weatherAlert.severity === 'high' ? 'destructive' : 'default'} className="mb-4 bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-800">
+                <TriangleAlert className="h-4 w-4 text-yellow-600" />
+                <AlertTitle className="text-yellow-800 dark:text-yellow-200">{t('weatherAlert')}</AlertTitle>
+                <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                  {weatherAlert.alert}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {getWeatherIcon(weatherData.current.weather.icon, true)}

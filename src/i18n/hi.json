@@ -113,5 +113,6 @@
   "weatherError": "मौसम त्रुटि",
   "weatherFetchError": "मौसम डेटा प्राप्त नहीं किया जा सका। कृपया अपनी एपीआई कुंजी जांचें।",
   "marketDataFetchError": "बाजार डेटा प्राप्त नहीं किया जा सका।",
-  "marketDataError": "बाजार डेटा त्रुटि"
+  "marketDataError": "बाजार डेटा त्रुटि",
+  "weatherAlert": "मौसम चेतावनी"
 }

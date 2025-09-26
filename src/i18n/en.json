@@ -113,5 +113,6 @@
   "weatherError": "Weather Error",
   "weatherFetchError": "Could not fetch weather data. Please check your API key.",
   "marketDataFetchError": "Could not fetch market data.",
-  "marketDataError": "Market Data Error"
+  "marketDataError": "Market Data Error",
+  "weatherAlert": "Weather Alert"
 }

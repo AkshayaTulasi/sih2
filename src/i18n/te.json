@@ -113,5 +113,6 @@
   "weatherError": "వాతావరణ లోపం",
   "weatherFetchError": "వాతావరణ డేటాను పొందడం సాధ్యపడలేదు. దయచేసి మీ API కీని తనిఖీ చేయండి.",
   "marketDataFetchError": "మార్కెట్ డేటాను పొందడం సాధ్యం కాలేదు.",
-  "marketDataError": "మార్కెట్ డేటా లోపం"
+  "marketDataError": "మార్కెట్ డేటా లోపం",
+  "weatherAlert": "వాతావరణ హెచ్చరిక"
 }

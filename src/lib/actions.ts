@@ -15,6 +15,7 @@ import { answerQuestion as answerQuestionFlow, type AnswerQuestionInput, type An
 import { convertTextToSpeech as convertTextToSpeechFlow, type ConvertTextToSpeechInput, type ConvertTextToSpeechOutput } from "@/ai/flows/convert-text-to-speech";
 import { getWeatherData, type GetWeatherDataInput, type GetWeatherDataOutput } from "@/ai/flows/get-weather-data";
 import { getMarketPrices as getMarketPricesFlow, type GetMarketPricesInput, type GetMarketPricesOutput } from "@/ai/flows/get-market-prices";
+import { generateWeatherAlert, type GenerateWeatherAlertInput, type GenerateWeatherAlertOutput } from "@/ai/flows/generate-weather-alert";
 import { z } from "zod";
 
 const cropRecommendationActionSchema = z.object({
@@ -193,5 +194,30 @@ export async function getMarketPrices(input: GetMarketPricesInput): Promise<{
             return { success: false, error: e.message };
         }
         return { success: false, error: "Failed to fetch market prices." };
+    }
+}
+
+const generateWeatherAlertActionSchema = z.object({
+    weatherData: z.any(),
+    language: z.string().optional(),
+});
+
+export async function generateWeatherAlertAction(input: GenerateWeatherAlertInput): Promise<{
+    success: boolean;
+    data?: GenerateWeatherAlertOutput;
+    error?: string;
+}> {
+    const parsed = generateWeatherAlertActionSchema.safeParse(input);
+    if (!parsed.success) {
+        return { success: false, error: "Invalid input." };
+    }
+    try {
+        const result = await generateWeatherAlert(parsed.data);
+        return { success: true, data: result };
+    } catch (e) {
+        if (e instanceof Error) {
+            return { success: false, error: e.message };
+        }
+        return { success: false, error: "Failed to generate weather alert." };
     }
 }

@@ -47,7 +47,7 @@
   "intermediate": "মধ্যবর্তী",
   "expert": "বিশেষজ্ঞ",
   "cropPreferences": "শস্য পছন্দ (ঐচ্ছিক)",
-  "cropPreferencesPlaceholder": "যেমন, অর্থকরী ফসল, সবজি বা ফলের प्रति আগ্রহী।",
+  "cropPreferencesPlaceholder": "যেমন, অর্থকরী ফসল, সবজি বা ফলের প্রতি আগ্রহী।",
   "getRecommendation": "সুপারিশ পান",
   "recommendation": "সুপারিশ",
   "reasoning": "যুক্তি",
@@ -113,5 +113,6 @@
   "weatherError": "আবহাওয়ার ত্রুটি",
   "weatherFetchError": "আবহাওয়ার ডেটা আনা যায়নি। অনুগ্রহ করে আপনার API কী পরীক্ষা করুন।",
   "marketDataFetchError": "বাজারের ডেটা আনা যায়নি।",
-  "marketDataError": "বাজারের ডেটা ত্রুটি"
+  "marketDataError": "বাজারের ডেটা ত্রুটি",
+  "weatherAlert": "আবহাওয়ার সতর্কতা"
 }
