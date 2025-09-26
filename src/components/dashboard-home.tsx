@@ -4,10 +4,11 @@ import { useLanguage } from "@/context/language-context";
 import { MarketWatch } from "./market-watch";
 import { WeatherCard } from "./weather-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import { Building, HeartHandshake, Rocket, Users, Handshake } from "lucide-react";
+import { Handshake } from "lucide-react";
 import { EcosystemDialog } from "./ecosystem-dialog";
-import { Button } from "./ui/button";
 import { GovernmentSchemes } from "./government-schemes";
+import { NgoCooperativeDialog } from "./ngo-cooperative-dialog";
+import { AgritechStartupDialog } from "./agritech-startup-dialog";
 
 export function DashboardHome() {
   const { t } = useLanguage();
@@ -45,14 +46,8 @@ export function DashboardHome() {
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <EcosystemDialog />
           <GovernmentSchemes />
-           <Button variant="outline" className="w-full py-6 text-base" disabled>
-            <HeartHandshake className="w-6 h-6 mr-2" />
-            NGOs & Cooperatives
-          </Button>
-           <Button variant="outline" className="w-full py-6 text-base" disabled>
-            <Rocket className="w-6 h-6 mr-2" />
-            Agri-Tech Startups
-          </Button>
+          <NgoCooperativeDialog />
+          <AgritechStartupDialog />
         </CardContent>
       </Card>
     </div>
