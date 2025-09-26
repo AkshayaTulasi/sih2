@@ -9,39 +9,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "./ui/button";
 import { useLanguage } from "@/context/language-context";
-import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Textarea } from "./ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "./ui/skeleton";
 import { communityFormSchema, type CommunityFormInput } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { answerQuestionAction } from "@/lib/actions";
 import { Loader, Send, User, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface Post {
   id: number;
   question: string;
-  answer: string | null;
-  loading: boolean;
 }
 
 export function EcosystemDialog() {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
-  const { toast } = useToast();
 
   const form = useForm<CommunityFormInput>({
     resolver: zodResolver(communityFormSchema),
@@ -55,28 +43,11 @@ export function EcosystemDialog() {
     const newPost: Post = {
       id: Date.now(),
       question: values.question,
-      answer: null,
-      loading: true,
     };
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     setPosts([newPost, ...posts]);
     form.reset();
-
-    const res = await answerQuestionAction({ 
-        question: values.question, 
-        language,
-        persona: "an Agricultural Extension Officer who provides practical, field-level advice"
-    });
-
-    if (res.success && res.data) {
-      setPosts(prevPosts => prevPosts.map(p => p.id === newPost.id ? {...p, answer: res.data!.answer, loading: false} : p));
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: res.error || "Failed to get answer.",
-      });
-       setPosts(prevPosts => prevPosts.map(p => p.id === newPost.id ? {...p, answer: "Sorry, I could not process your request.", loading: false} : p));
-    }
     setLoading(false);
   }
 
@@ -95,7 +66,7 @@ export function EcosystemDialog() {
             Ask an Extension Officer
             </DialogTitle>
           <DialogDescription>
-            Get practical, field-level advice from the perspective of an experienced Agricultural Extension Officer.
+            Get practical, field-level advice from an experienced Agricultural Extension Officer. Your question will be posted for an officer to answer.
           </DialogDescription>
         </DialogHeader>
         
@@ -126,7 +97,7 @@ export function EcosystemDialog() {
                     ) : (
                         <Send />
                     )}
-                    Ask Question
+                    Post Question
                     </Button>
                 </form>
                 </Form>
@@ -148,22 +119,15 @@ export function EcosystemDialog() {
                 </div>
             </CardHeader>
             <CardContent>
-                {post.loading ? (
-                <div className="space-y-2">
-                    <Skeleton className="w-full h-4" />
-                    <Skeleton className="w-2/3 h-4" />
-                </div>
-                ) : (
                 <div className="flex items-start gap-4 p-4 mt-4 border-t">
-                    <Avatar className="bg-primary/10">
+                  <Avatar className="bg-primary/10">
                     <AvatarFallback className="text-primary font-bold text-xs">EO</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                    <p className="font-semibold text-sm">Extension Officer's Answer</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{post.answer}</p>
-                    </div>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Awaiting Answer</p>
+                    <p className="text-xs text-muted-foreground">An Extension Officer will answer your question shortly.</p>
+                  </div>
                 </div>
-                )}
             </CardContent>
             </Card>
         ))}

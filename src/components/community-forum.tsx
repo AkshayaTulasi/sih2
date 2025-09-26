@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,24 +21,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "./ui/skeleton";
 import { useLanguage } from "@/context/language-context";
-import { answerQuestionAction } from "@/lib/actions";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface Post {
   id: number;
   question: string;
-  answer: string | null;
-  loading: boolean;
 }
 
 export function CommunityForum() {
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
-  const { toast } = useToast();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const form = useForm<CommunityFormInput>({
     resolver: zodResolver(communityFormSchema),
@@ -51,25 +46,11 @@ export function CommunityForum() {
     const newPost: Post = {
       id: Date.now(),
       question: values.question,
-      answer: null,
-      loading: true,
     };
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     setPosts([newPost, ...posts]);
     form.reset();
-
-    const res = await answerQuestionAction({ question: values.question, language });
-
-    if (res.success && res.data) {
-      setPosts(prevPosts => prevPosts.map(p => p.id === newPost.id ? {...p, answer: res.data!.answer, loading: false} : p));
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: res.error || "Failed to get answer.",
-      });
-       setPosts(prevPosts => prevPosts.map(p => p.id === newPost.id ? {...p, answer: "Sorry, I could not process your request.", loading: false} : p));
-    }
-
     setLoading(false);
   }
 
@@ -139,22 +120,15 @@ export function CommunityForum() {
               </div>
             </CardHeader>
             <CardContent>
-              {post.loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-2/3 h-4" />
+              <div className="flex items-start gap-4 p-4 mt-4 border-t">
+                <Avatar className="bg-primary/10">
+                  <AvatarFallback className="text-primary font-bold text-sm">AI</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-semibold">{t('answer')}</p>
+                  <p className="text-xs text-muted-foreground">Your question has been posted. An expert will answer it shortly.</p>
                 </div>
-              ) : (
-                <div className="flex items-start gap-4 p-4 mt-4 border-t">
-                  <Avatar className="bg-primary/10">
-                    <AvatarFallback className="text-primary font-bold text-sm">AI</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-semibold">{t('answer')}</p>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{post.answer}</p>
-                  </div>
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         ))}

@@ -18,24 +18,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Textarea } from "./ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { communityFormSchema, type CommunityFormInput } from "@/lib/types";
-import { answerQuestionAction } from "@/lib/actions";
-import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface Post {
   id: number;
   question: string;
-  answer: string | null;
-  loading: boolean;
 }
 
 export function AgritechStartupDialog() {
   const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
-  const { toast } = useToast();
 
   const form = useForm<CommunityFormInput>({
     resolver: zodResolver(communityFormSchema),
@@ -49,38 +43,11 @@ export function AgritechStartupDialog() {
     const newPost: Post = {
       id: Date.now(),
       question: values.question,
-      answer: null,
-      loading: true,
     };
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     setPosts([newPost, ...posts]);
     form.reset();
-
-    const res = await answerQuestionAction({
-      question: values.question,
-      language,
-      persona: "an Agri-Tech Startup representative explaining how technology, data, and innovative products can solve farming problems",
-    });
-
-    if (res.success && res.data) {
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === newPost.id ? { ...p, answer: res.data!.answer, loading: false } : p
-        )
-      );
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: res.error || "Failed to get answer.",
-      });
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === newPost.id
-            ? { ...p, answer: "Sorry, I could not process your request.", loading: false }
-            : p
-        )
-      );
-    }
     setLoading(false);
   }
 
@@ -99,7 +66,7 @@ export function AgritechStartupDialog() {
             Ask an Agri-Tech Startup
           </DialogTitle>
           <DialogDescription>
-            Ask about how technology, sensors, drones, and data can improve your farming practices from an innovator's perspective.
+            Ask about how technology, sensors, drones, and data can improve your farming practices from an innovator's perspective. Your question will be posted for a representative to answer.
           </DialogDescription>
         </DialogHeader>
         <Card>
@@ -124,7 +91,7 @@ export function AgritechStartupDialog() {
                 />
                 <Button type="submit" disabled={loading} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                   {loading ? <Loader className="animate-spin" /> : <Send />}
-                  Ask Question
+                  Post Question
                 </Button>
               </form>
             </Form>
@@ -148,24 +115,17 @@ export function AgritechStartupDialog() {
                 </div>
               </CardHeader>
               <CardContent>
-                {post.loading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="w-full h-4" />
-                    <Skeleton className="w-2/3 h-4" />
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-4 p-4 mt-4 border-t">
-                    <Avatar className="bg-primary/10">
+                <div className="flex items-start gap-4 p-4 mt-4 border-t">
+                  <Avatar className="bg-primary/10">
                       <AvatarFallback className="text-primary font-bold text-xs">TECH</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">Startup's Answer</p>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {post.answer}
-                      </p>
-                    </div>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Awaiting Answer</p>
+                    <p className="text-xs text-muted-foreground">
+                      An Agri-Tech Startup representative will answer your question shortly.
+                    </p>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}

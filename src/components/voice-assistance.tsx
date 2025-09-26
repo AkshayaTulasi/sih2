@@ -3,12 +3,10 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
-import { Mic, MicOff, AlertCircle, Loader, User, Volume2 } from "lucide-react";
+import { Mic, MicOff, AlertCircle, Loader } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { answerQuestionAction, convertTextToSpeech } from "@/lib/actions";
 
 declare global {
   interface Window {
@@ -22,13 +20,8 @@ export function VoiceAssistant() {
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
-  const [transcript, setTranscript] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const checkMicPermission = async () => {
@@ -52,8 +45,10 @@ export function VoiceAssistant() {
 
       recognitionRef.current.onresult = (event: any) => {
         const spokenText = event.results[0][0].transcript;
-        setTranscript(spokenText);
-        handleSpokenText(spokenText);
+        toast({
+          title: "Heard you!",
+          description: `You said: "${spokenText}". This feature is a demo and does not process your request further.`
+        })
       };
 
       recognitionRef.current.onerror = (event: any) => {
@@ -88,35 +83,6 @@ export function VoiceAssistant() {
     }
   }, [language]);
 
-  const handleSpokenText = async (text: string) => {
-    if (!text) return;
-    setLoading(true);
-    setAiResponse("");
-    setAudioSrc(null);
-    const res = await answerQuestionAction({ question: text, language });
-
-    if (res.success && res.data?.answer) {
-      setAiResponse(res.data.answer);
-      const audioRes = await convertTextToSpeech({ text: res.data.answer });
-      if (audioRes.success && audioRes.data?.audioDataUri) {
-        setAudioSrc(audioRes.data.audioDataUri);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Audio Error",
-          description: audioRes.error || "Failed to generate audio response.",
-        });
-      }
-    } else {
-      setAiResponse("Sorry, I couldn't get an answer for that.");
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: res.error || "Failed to get an answer.",
-      });
-    }
-    setLoading(false);
-  };
   
   const toggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -125,19 +91,10 @@ export function VoiceAssistant() {
       recognitionRef.current.stop();
       setIsRecording(false);
     } else {
-      setTranscript("");
-      setAiResponse("");
-      setAudioSrc(null);
       recognitionRef.current.start();
       setIsRecording(true);
     }
   };
-
-  useEffect(() => {
-    if (audioSrc && audioRef.current) {
-      audioRef.current.play();
-    }
-  }, [audioSrc]);
 
   if (hasMicPermission === null) {
     return (
@@ -175,32 +132,6 @@ export function VoiceAssistant() {
         {isRecording ? t('listening') : t('tapToSpeak')}
       </p>
 
-      {(loading || transcript || aiResponse) && (
-        <Card className="text-left animate-in fade-in">
-          <CardContent className="p-6 space-y-4">
-            {transcript && (
-              <div className="flex items-start gap-4">
-                <User className="w-6 h-6 mt-1 text-primary" />
-                <div className="flex-1">
-                  <p className="font-semibold">{t('youSaid')}:</p>
-                  <p className="text-muted-foreground">"{transcript}"</p>
-                </div>
-              </div>
-            )}
-            {loading && <Loader className="mx-auto my-4 w-7 h-7 animate-spin" />}
-            {aiResponse && (
-              <div className="flex items-start gap-4 pt-4 border-t">
-                 <Volume2 className="w-6 h-6 mt-1 text-accent" />
-                <div className="flex-1">
-                  <p className="font-semibold">{t('aiResponse')}:</p>
-                  <p className="text-muted-foreground">{aiResponse}</p>
-                </div>
-              </div>
-            )}
-            {audioSrc && <audio ref={audioRef} src={audioSrc} className="hidden" />}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
