@@ -5,28 +5,11 @@ import { MarketWatch } from "./market-watch";
 import { WeatherCard } from "./weather-card";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Building, HeartHandshake, Rocket, Users } from "lucide-react";
+import { EcosystemDialog } from "./ecosystem-dialog";
 
 export function DashboardHome() {
   const { t } = useLanguage();
-  const ecosystemPartners = [
-    {
-      name: "Agricultural extension officers",
-      icon: <Users className="w-6 h-6 text-primary" />,
-    },
-    {
-      name: "Government agriculture departments",
-      icon: <Building className="w-6 h-6 text-primary" />,
-    },
-    {
-      name: "NGOs and cooperatives",
-      icon: <HeartHandshake className="w-6 h-6 text-primary" />,
-    },
-    {
-      name: "Agri-tech startups",
-      icon: <Rocket className="w-6 h-6 text-primary" />,
-    },
-  ];
-
+  
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -47,21 +30,7 @@ export function DashboardHome() {
         </div>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Our Ecosystem</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {ecosystemPartners.map((partner) => (
-              <div key={partner.name} className="flex items-center gap-4 p-4 rounded-lg bg-background/80">
-                {partner.icon}
-                <span className="font-medium">{partner.name}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <EcosystemDialog />
     </div>
   );
 }
