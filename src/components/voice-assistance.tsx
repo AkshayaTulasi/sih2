@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
 import { Mic, MicOff, AlertCircle, Loader, User, Volume2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { answerQuestion, convertTextToSpeech } from "@/lib/actions";
+import { answerQuestionAction, convertTextToSpeech } from "@/lib/actions";
 
 declare global {
   interface Window {
@@ -93,7 +93,7 @@ export function VoiceAssistant() {
     setLoading(true);
     setAiResponse("");
     setAudioSrc(null);
-    const res = await answerQuestion({ question: text, language });
+    const res = await answerQuestionAction({ question: text, language });
 
     if (res.success && res.data?.answer) {
       setAiResponse(res.data.answer);

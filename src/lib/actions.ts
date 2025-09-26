@@ -17,9 +17,6 @@ import { convertTextToSpeech as convertTextToSpeechFlow, type ConvertTextToSpeec
 import { getWeatherData, type GetWeatherDataInput, type GetWeatherDataOutput } from "@/ai/flows/get-weather-data";
 import { getMarketPrices as getMarketPricesFlow, type GetMarketPricesInput, type GetMarketPricesOutput } from "@/ai/flows/get-market-prices";
 import { generateWeatherAlert, type GenerateWeatherAlertInput, type GenerateWeatherAlertOutput } from "@/ai/flows/generate-weather-alert";
-import { generateSchemes, type GenerateSchemesInput, type GenerateSchemesOutput } from "@/ai/flows/generate-schemes";
-import { generateMarketTrendAnalysis, type GenerateMarketTrendAnalysisInput, type GenerateMarketTrendAnalysisOutput } from "@/ai/flows/generate-market-trend-analysis";
-import { generateYieldPrediction, type GenerateYieldPredictionInput, type GenerateYieldPredictionOutput } from "@/ai/flows/generate-yield-prediction";
 
 import { z } from "zod";
 
@@ -108,9 +105,10 @@ const answerQuestionActionSchema = z.object({
   question: z.string(),
   context: z.string().optional(),
   language: z.string().optional(),
+  persona: z.string().optional(),
 });
 
-export async function answerQuestion(input: AnswerQuestionInput): Promise<{
+export async function answerQuestionAction(input: AnswerQuestionInput): Promise<{
   success: boolean;
   data?: AnswerQuestionOutput;
   error?: string;
@@ -226,86 +224,3 @@ export async function generateWeatherAlertAction(input: GenerateWeatherAlertInpu
         return { success: false, error: "Failed to generate weather alert." };
     }
 }
-
-const generateSchemesActionSchema = z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-    language: z.string().optional(),
-});
-
-export async function generateSchemesAction(input: GenerateSchemesInput): Promise<{
-    success: boolean;
-    data?: GenerateSchemesOutput;
-    error?: string;
-}> {
-    const parsed = generateSchemesActionSchema.safeParse(input);
-    if (!parsed.success) {
-        return { success: false, error: "Invalid input." };
-    }
-    try {
-        const result = await generateSchemes(parsed.data);
-        return { success: true, data: result };
-    } catch (e) {
-        if (e instanceof Error) {
-            return { success: false, error: e.message };
-        }
-        return { success: false, error: "Failed to generate schemes." };
-    }
-}
-
-const generateMarketTrendAnalysisActionSchema = z.object({
-    cropName: z.string(),
-    location: z.string(),
-    language: z.string().optional(),
-});
-
-export async function generateMarketTrendAnalysisAction(input: GenerateMarketTrendAnalysisInput): Promise<{
-    success: boolean;
-    data?: GenerateMarketTrendAnalysisOutput;
-    error?: string;
-}> {
-    const parsed = generateMarketTrendAnalysisActionSchema.safeParse(input);
-    if (!parsed.success) {
-        return { success: false, error: "Invalid input." };
-    }
-    try {
-        const result = await generateMarketTrendAnalysis(parsed.data);
-        return { success: true, data: result };
-    } catch (e) {
-        if (e instanceof Error) {
-            return { success: false, error: e.message };
-        }
-        return { success: false, error: "Failed to generate market trend analysis." };
-    }
-}
-
-const generateYieldPredictionActionSchema = z.object({
-    cropName: z.string(),
-    soilType: z.string(),
-    nitrogen: z.number(),
-    phosphorus: z.number(),
-    potassium: z.number(),
-    language: z.string().optional(),
-});
-
-export async function generateYieldPredictionAction(input: GenerateYieldPredictionInput): Promise<{
-    success: boolean;
-    data?: GenerateYieldPredictionOutput;
-    error?: string;
-}> {
-    const parsed = generateYieldPredictionActionSchema.safeParse(input);
-    if (!parsed.success) {
-        return { success: false, error: "Invalid input." };
-    }
-    try {
-        const result = await generateYieldPrediction(parsed.data);
-        return { success: true, data: result };
-    } catch (e) {
-        if (e instanceof Error) {
-            return { success: false, error: e.message };
-        }
-        return { success: false, error: "Failed to generate yield prediction." };
-    }
-}
-
-    

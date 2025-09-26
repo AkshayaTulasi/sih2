@@ -10,59 +10,81 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
 import { useLanguage } from "@/context/language-context";
-import { Building, Loader, AlertCircle, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
-import { generateSchemesAction } from "@/lib/actions";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Building, Loader, Send, User } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Textarea } from "./ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { communityFormSchema, type CommunityFormInput } from "@/lib/types";
+import { answerQuestionAction } from "@/lib/actions";
 import { Skeleton } from "./ui/skeleton";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
-interface Scheme {
-  schemeName: string;
-  description: string;
-  eligibility: string;
-  url: string;
+interface Post {
+  id: number;
+  question: string;
+  answer: string | null;
+  loading: boolean;
 }
 
 export function GovernmentSchemes() {
   const { t, language } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (isOpen && schemes.length === 0) {
-      const fetchSchemes = async () => {
-        setLoading(true);
-        setError(null);
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              const res = await generateSchemesAction({ latitude, longitude, language });
-              if (res.success && res.data) {
-                setSchemes(res.data.schemes);
-              } else {
-                setError(res.error || "Failed to fetch schemes.");
-              }
-              setLoading(false);
-            },
-            () => {
-              setError(t("locationAccessDenied"));
-              setLoading(false);
-            }
-          );
-        } else {
-          setError(t("geolocationNotSupported"));
-          setLoading(false);
-        }
-      };
-      fetchSchemes();
+  const form = useForm<CommunityFormInput>({
+    resolver: zodResolver(communityFormSchema),
+    defaultValues: {
+      question: "",
+    },
+  });
+
+  async function onSubmit(values: CommunityFormInput) {
+    setLoading(true);
+    const newPost: Post = {
+      id: Date.now(),
+      question: values.question,
+      answer: null,
+      loading: true,
+    };
+    setPosts([newPost, ...posts]);
+    form.reset();
+
+    const res = await answerQuestionAction({
+      question: values.question,
+      language,
+      persona: "a Government Agriculture Department official explaining policies and schemes",
+    });
+
+    if (res.success && res.data) {
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === newPost.id ? { ...p, answer: res.data!.answer, loading: false } : p
+        )
+      );
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: res.error || "Failed to get answer.",
+      });
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === newPost.id
+            ? { ...p, answer: "Sorry, I could not process your request.", loading: false }
+            : p
+        )
+      );
     }
-  }, [isOpen, schemes.length, language, t]);
+    setLoading(false);
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full py-6 text-base">
           <Building className="w-6 h-6 mr-2" />
@@ -71,51 +93,81 @@ export function GovernmentSchemes() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Government Agricultural Schemes</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Building />
+            Ask a Government Dept.
+          </DialogTitle>
           <DialogDescription>
-            Discover relevant government schemes for your region powered by AI.
+            Get information on policies, schemes, and official procedures from the perspective of a government agricultural department.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-          {loading && (
-            <div className="space-y-4">
-              <Skeleton className="w-full h-24" />
-              <Skeleton className="w-full h-24" />
-              <Skeleton className="w-full h-24" />
-            </div>
-          )}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="w-4 h-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {!loading && !error && schemes.length > 0 && (
-            <div className="space-y-4">
-              {schemes.map((scheme, index) => (
-                <div key={index} className="p-4 border rounded-lg">
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
-                    <Sparkles className="w-5 h-5" />
-                    {scheme.schemeName}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{scheme.description}</p>
-                  <div className="mt-3">
-                    <p className="text-sm font-semibold">Eligibility:</p>
-                    <p className="text-sm text-muted-foreground">{scheme.eligibility}</p>
+        <Card>
+          <CardContent className="p-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="question"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Question</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="e.g., 'What are the eligibility criteria for the PM-KISAN scheme?'"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={loading} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {loading ? <Loader className="animate-spin" /> : <Send />}
+                  Ask Question
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <div className="mt-4 space-y-4">
+          {posts.map((post) => (
+            <Card key={post.id} className="animate-in fade-in">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Avatar>
+                    <AvatarFallback>
+                      <User />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <CardTitle className="text-base">Your Question</CardTitle>
+                    <p className="text-sm text-muted-foreground">{post.question}</p>
                   </div>
-                  <Button variant="link" asChild className="px-0 mt-2">
-                    <a href={scheme.url} target="_blank" rel="noopener noreferrer">
-                      Learn More
-                    </a>
-                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-           {!loading && !error && schemes.length === 0 && (
-            <p className="text-center text-muted-foreground">No schemes found for your location.</p>
-           )}
+              </CardHeader>
+              <CardContent>
+                {post.loading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-2/3 h-4" />
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-4 p-4 mt-4 border-t">
+                    <Avatar className="bg-primary/10">
+                      <AvatarFallback className="text-primary font-bold text-xs">GOV</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Official's Answer</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {post.answer}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </DialogContent>
     </Dialog>

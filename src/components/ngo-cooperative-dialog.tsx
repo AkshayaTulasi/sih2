@@ -11,63 +11,77 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
 import { useLanguage } from "@/context/language-context";
-import { HeartHandshake, Loader, Send, BarChart, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { HeartHandshake, Loader, Send, User } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { Input } from "./ui/input";
-import { Card, CardContent } from "./ui/card";
+import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { generateMarketTrendAnalysisAction } from "@/lib/actions";
+import { communityFormSchema, type CommunityFormInput } from "@/lib/types";
+import { answerQuestionAction } from "@/lib/actions";
 import { Skeleton } from "./ui/skeleton";
-import { Progress } from "./ui/progress";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const formSchema = z.object({
-  cropName: z.string().min(2, "Crop name is required."),
-  location: z.string().min(2, "Location is required."),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-interface TrendResult {
-  trend: "upward" | "downward" | "stable";
-  analysis: string;
-  confidence: number;
+interface Post {
+  id: number;
+  question: string;
+  answer: string | null;
+  loading: boolean;
 }
 
 export function NgoCooperativeDialog() {
   const { t, language } = useLanguage();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<TrendResult | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const { toast } = useToast();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { cropName: "", location: "" },
+  const form = useForm<CommunityFormInput>({
+    resolver: zodResolver(communityFormSchema),
+    defaultValues: {
+      question: "",
+    },
   });
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: CommunityFormInput) {
     setLoading(true);
-    setResult(null);
-    const res = await generateMarketTrendAnalysisAction({ ...values, language });
+    const newPost: Post = {
+      id: Date.now(),
+      question: values.question,
+      answer: null,
+      loading: true,
+    };
+    setPosts([newPost, ...posts]);
+    form.reset();
+
+    const res = await answerQuestionAction({
+      question: values.question,
+      language,
+      persona: "an NGO or Cooperative representative focused on community empowerment, sustainable practices, and collective action",
+    });
+
     if (res.success && res.data) {
-      setResult(res.data);
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === newPost.id ? { ...p, answer: res.data!.answer, loading: false } : p
+        )
+      );
     } else {
       toast({
         variant: "destructive",
         title: "Error",
-        description: res.error || "Failed to get market trend analysis.",
+        description: res.error || "Failed to get answer.",
       });
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === newPost.id
+            ? { ...p, answer: "Sorry, I could not process your request.", loading: false }
+            : p
+        )
+      );
     }
     setLoading(false);
-  }
-  
-  const TrendIcon = ({trend}: {trend: TrendResult['trend']}) => {
-    if (trend === 'upward') return <TrendingUp className="w-6 h-6 text-green-500" />;
-    if (trend === 'downward') return <TrendingDown className="w-6 h-6 text-red-500" />;
-    return <Minus className="w-6 h-6 text-gray-500" />;
   }
 
   return (
@@ -75,86 +89,87 @@ export function NgoCooperativeDialog() {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full h-full py-6 text-base">
           <HeartHandshake className="w-6 h-6 mr-2" />
-          NGOs & Cooperatives
+          NGOs &amp; Cooperatives
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
-            <BarChart />
-            Market Trend Analysis
+            <HeartHandshake />
+            Ask an NGO / Cooperative
           </DialogTitle>
           <DialogDescription>
-            Empower collective decision-making with AI-powered market trend forecasts. Enter a crop and market to get a one-week price trend analysis.
+            Get advice on sustainable farming, community projects, and collective marketing from an NGO/Cooperative perspective.
           </DialogDescription>
         </DialogHeader>
         <Card>
           <CardContent className="p-4">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="cropName"
+                  name="question"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Crop Name</FormLabel>
+                      <FormLabel>Your Question</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Tomato" {...field} />
+                        <Textarea
+                          placeholder="e.g., 'How can our village start a farmer's cooperative?'"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Market Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Pune" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={loading} className="w-full md:w-auto md:col-span-2">
-                  {loading ? (
-                    <Loader className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                  Analyze Trend
+                <Button type="submit" disabled={loading} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {loading ? <Loader className="animate-spin" /> : <Send />}
+                  Ask Question
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
-        
-        {loading && <Skeleton className="w-full h-32" />}
 
-        {result && (
-          <Card className="animate-in fade-in">
-            <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">Price Trend</p>
-                        <p className="flex items-center gap-2 text-xl font-bold capitalize">
-                            <TrendIcon trend={result.trend} />
-                            {result.trend}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm font-medium text-muted-foreground">Confidence</p>
-                        <p className="text-xl font-bold">{(result.confidence * 100).toFixed(0)}%</p>
-                    </div>
+        <div className="mt-4 space-y-4">
+          {posts.map((post) => (
+            <Card key={post.id} className="animate-in fade-in">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Avatar>
+                    <AvatarFallback>
+                      <User />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <CardTitle className="text-base">Your Question</CardTitle>
+                    <p className="text-sm text-muted-foreground">{post.question}</p>
+                  </div>
                 </div>
-                <Progress value={result.confidence * 100} className="mt-2 h-2" />
-                <p className="mt-4 text-sm font-medium">Analysis:</p>
-                <p className="text-sm text-muted-foreground">{result.analysis}</p>
-            </CardContent>
-          </Card>
-        )}
+              </CardHeader>
+              <CardContent>
+                {post.loading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-2/3 h-4" />
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-4 p-4 mt-4 border-t">
+                    <Avatar className="bg-primary/10">
+                      <AvatarFallback className="text-primary font-bold text-xs">NGO</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Representative's Answer</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {post.answer}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </DialogContent>
     </Dialog>
   );

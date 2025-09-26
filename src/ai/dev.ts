@@ -9,6 +9,3 @@ import '@/ai/flows/convert-text-to-speech.ts';
 import '@/ai/flows/get-weather-data.ts';
 import '@/ai/flows/get-market-prices.ts';
 import '@/ai/flows/generate-weather-alert.ts';
-import '@/ai/flows/generate-schemes.ts';
-import '@/ai/flows/generate-market-trend-analysis.ts';
-import '@/ai/flows/generate-yield-prediction.ts';

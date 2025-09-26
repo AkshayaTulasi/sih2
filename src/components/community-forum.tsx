@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
 import { useLanguage } from "@/context/language-context";
-import { answerQuestion } from "@/lib/actions";
+import { answerQuestionAction } from "@/lib/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface Post {
@@ -57,7 +57,7 @@ export function CommunityForum() {
     setPosts([newPost, ...posts]);
     form.reset();
 
-    const res = await answerQuestion({ question: values.question, language });
+    const res = await answerQuestionAction({ question: values.question, language });
 
     if (res.success && res.data) {
       setPosts(prevPosts => prevPosts.map(p => p.id === newPost.id ? {...p, answer: res.data!.answer, loading: false} : p));
