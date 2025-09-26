@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "./ui/button";
 import { useLanguage } from "@/context/language-context";
-import { Building, HeartHandshake, Rocket, Users, Handshake } from "lucide-react";
+import { Users } from "lucide-react";
 
 export function EcosystemDialog() {
   const { t } = useLanguage();
@@ -33,55 +33,22 @@ export function EcosystemDialog() {
         "Helps officers train farmers at scale using localized content, videos, and AI-driven advice."
       ]
     },
-    {
-      name: "Government Agriculture Departments",
-      icon: <Building className="w-6 h-6 text-primary" />,
-      problem: "Need large-scale monitoring, policy implementation, and farmer support.",
-      solution: [
-        "Data collection & analysis: Aggregates field-level data (yields, soil conditions, pest outbreaks) for better policymaking.",
-        "Scheme dissemination: Pushes government program details, subsidies, and updates to farmers digitally.",
-        "Monitoring impact: Departments can measure adoption of schemes, training sessions, and farmer outcomes.",
-        "Disaster management: Early warnings (floods, droughts, locusts) can be broadcast instantly."
-      ]
-    },
-    {
-      name: "NGOs and Cooperatives",
-      icon: <HeartHandshake className="w-6 h-6 text-primary" />,
-      problem: "NGOs need to improve farmer livelihoods and cooperatives must ensure member productivity and profitability.",
-      solution: [
-        "Training & awareness campaigns: Share sustainable farming practices, organic methods, and climate-resilient practices.",
-        "Collective decision-making: Helps cooperatives track member crops, plan collective sales, and negotiate better market prices.",
-        "Financial inclusion: Integrates with microcredit, insurance, and loan services, making it easier for NGOs to connect farmers.",
-        "Impact measurement: NGOs can use app data to report outcomes to donors (yields improved, income levels increased, adoption of practices)."
-      ]
-    },
-    {
-      name: "Agri-Tech Startups",
-      icon: <Rocket className="w-6 h-6 text-primary" />,
-      problem: "Startups need farmer adoption and integration with other agri-value chain players.",
-      solution: [
-        "Farmer engagement platform: Startups can use it to deliver precision agri-advice, farm input recommendations, and crop management tools.",
-        "Marketplace integration: Links farmers to buyers, e-commerce platforms, or fintech services through the app.",
-        "API ecosystem: Startups can plug in their services (weather API, soil testing kits, drone services) into AgriAssist.",
-        "Scalability: Reduces customer acquisition costs by serving as a ready-to-use platform to reach thousands of farmers."
-      ]
-    },
   ];
 
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full py-6 text-lg">
-          <Handshake className="w-6 h-6 mr-2" />
-          Our Ecosystem
+        <Button variant="outline" className="w-full py-6 text-base">
+          <Users className="w-6 h-6 mr-2" />
+          Agri. Extension Officers
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Our Agricultural Ecosystem</DialogTitle>
+          <DialogTitle className="text-2xl">For Agricultural Extension Officers</DialogTitle>
           <DialogDescription>
-            AgriAssist is designed to empower not just farmers, but the entire agricultural value chain. Here's how we help different stakeholders.
+            Here's how AgriAssist empowers officers to support farmers more effectively.
           </DialogDescription>
         </DialogHeader>
         <Accordion type="single" collapsible className="w-full">

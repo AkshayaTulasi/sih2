@@ -16,6 +16,8 @@ import { convertTextToSpeech as convertTextToSpeechFlow, type ConvertTextToSpeec
 import { getWeatherData, type GetWeatherDataInput, type GetWeatherDataOutput } from "@/ai/flows/get-weather-data";
 import { getMarketPrices as getMarketPricesFlow, type GetMarketPricesInput, type GetMarketPricesOutput } from "@/ai/flows/get-market-prices";
 import { generateWeatherAlert, type GenerateWeatherAlertInput, type GenerateWeatherAlertOutput } from "@/ai/flows/generate-weather-alert";
+import { generateSchemes, type GenerateSchemesInput, type GenerateSchemesOutput } from "@/ai/flows/generate-schemes";
+
 import { z } from "zod";
 
 const cropRecommendationActionSchema = z.object({
@@ -219,5 +221,31 @@ export async function generateWeatherAlertAction(input: GenerateWeatherAlertInpu
             return { success: false, error: e.message };
         }
         return { success: false, error: "Failed to generate weather alert." };
+    }
+}
+
+const generateSchemesActionSchema = z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+    language: z.string().optional(),
+});
+
+export async function generateSchemesAction(input: GenerateSchemesInput): Promise<{
+    success: boolean;
+    data?: GenerateSchemesOutput;
+    error?: string;
+}> {
+    const parsed = generateSchemesActionSchema.safeParse(input);
+    if (!parsed.success) {
+        return { success: false, error: "Invalid input." };
+    }
+    try {
+        const result = await generateSchemes(parsed.data);
+        return { success: true, data: result };
+    } catch (e) {
+        if (e instanceof Error) {
+            return { success: false, error: e.message };
+        }
+        return { success: false, error: "Failed to generate schemes." };
     }
 }
